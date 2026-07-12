@@ -12,9 +12,8 @@ LUNARIS_MOTION_WALLPAPER_ENGINE_DIR=""
 # Default {{{
 
 LUNARIS_MOTION_CACHE_FILE="${XDG_CACHE_HOME:-${HOME}/.cache}/lunaris-motion"
+LUNARIS_MOTION_SOCKET="${XDG_RUNTIME_DIR:-/run/user/${UID}}/lunaris-motion.sock"
 LUNARIS_MOTION_SYSTEM_DIR="${XDG_CONFIG_DIRS:-/etc/xdg}/lunaris-motion"
-
-export LUNARIS_MOTION_SOCKET="${XDG_RUNTIME_DIR:-/run/user/${UID}}/lunaris-motion.sock"
 # }}}
 
 # }}}
@@ -75,6 +74,7 @@ player() {
   if [[ "$(pgrep xwinwrap 2>/dev/null)" ]]; then
     rm -f "$LUNARIS_MOTION_SOCKET"
     pkill xwinwrap
+    pkill -f "$LUNARIS_MOTION_SYSTEM_DIR/lunaris-motion-daemon.sh"
     log "[INFO]: Killed old instances"
   fi
 
@@ -101,10 +101,14 @@ player() {
     mpv -wid WID "$wallpaper_file" --config-dir="$player_config" --input-ipc-server="$LUNARIS_MOTION_SOCKET" \
     --fullscreen --panscan=1 --no-audio --loop \
     --input-default-bindings=no --input-cursor=no --osc=no --osd-level=0 --terminal=no 2>/dev/null
+  
+  # Start slave
+  nohup "$LUNARIS_MOTION_SYSTEM_DIR/lunaris-motion-daemon.sh" > /dev/null 2>&1 &
 }
 # }}}
 
 # Socket {{{
+
 player_play() {
   if [[ -S "$LUNARIS_MOTION_SOCKET" ]]; then
     printf '%s\n' '{ "command": ["set_property", "pause", false] }' | socat - UNIX-CONNECT:"$LUNARIS_MOTION_SOCKET" > /dev/null
@@ -174,7 +178,7 @@ case "$1" in
   -h|--help)
     show_help
     exit 0
-;;
+  ;;
 
   *)
     log "[ERROR]: Option not found, use -h or --help for help"
