@@ -101,9 +101,6 @@ player() {
     mpv -wid WID "$wallpaper_file" --config-dir="$player_config" --input-ipc-server="$LUNARIS_MOTION_SOCKET" \
     --fullscreen --panscan=1 --no-audio --loop \
     --input-default-bindings=no --input-cursor=no --osc=no --osd-level=0 --terminal=no 2>/dev/null
-  
-  # Start slave
-  nohup "$LUNARIS_MOTION_SYSTEM_DIR/lunaris-motion-daemon.sh" > /dev/null 2>&1 &
 }
 # }}}
 
@@ -128,6 +125,14 @@ player_pause() {
 }
 # }}}
 
+# Slave {{{
+
+daemon() {
+  # Start daemon
+  nohup "$LUNARIS_MOTION_SYSTEM_DIR/lunaris-motion-daemon.sh" > /dev/null 2>&1 &
+}
+# }}}
+
 # Help {{{
 
 show_help() {
@@ -137,7 +142,8 @@ USAGE:
 
 COMMANDS:
   -we|--wallpaper-engine                Select video from Wallpaper Engine
-  -r|--restore                          Restore cached wallpaper
+  -r|--restore                          Restore cached wallpaper with daemon
+  -dls|--daemonless                     Restore cached wallpaper without daemon
 
   --play                                Resume player
   --pause                               Pause player
@@ -161,10 +167,17 @@ case "$1" in
   -we|--wallpaper-engine)
     wallpaper_engine
     player
+    daemon
   ;;
   
   -r|--restore)
     player
+    daemon
+  ;;
+
+  -d|--daemonless)
+    player
+    log "[INFO]: Start player daemonless"
   ;;
 
   --play)
