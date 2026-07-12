@@ -5,6 +5,7 @@
 
 # Settings {{{
 
+custom_player_config=""
 custom_wallpaper_engine_dir=""
 rofi_theme="lunaris-motion-grid"
 # }}}
@@ -63,6 +64,43 @@ wallpaper_engine() {
 }
 # }}}
 
+# Player {{{
+
+player() {
+
+  # Kill old instances
+  if [[ "$(pgrep xwinwrap 2>/dev/null)" ]]; then
+    pkill xwinwrap
+    log "[INFO]: Killed old instances"
+  fi
+
+  # Load wallpaper from cache_file
+  if [[ -f "$cache_file" ]]; then
+    wallpaper_file="$(<"$cache_file")"
+    log "[INFO]: Last video loaded from cache"
+  else
+    log "[ERROR]: No wallpaper loaded"
+    exit 1
+  fi
+
+  # Load player configuration
+  if [[ -f "$custom_player_config/mpv.conf" ]]; then
+    player_config="$custom_player_config"
+    log "[INFO]: User player configuration loaded"
+  else
+    player_config="$config_dir"
+    log "[INFO]: System player configuration loaded"
+  fi
+
+  # Embed video
+  xwinwrap -ni -fdt -fs -s -st -sp -b -nf -ovr -d -- \
+    mpv -wid WID "$wallpaper_file" --config-dir="$player_config" \
+    --fullscreen --panscan=1 --no-audio --loop \
+    --input-default-bindings=no --input-cursor=no --osc=no --osd-level=0 --terminal=no
+}
+# }}}
+
 # }}}
 
 wallpaper_engine
+player
