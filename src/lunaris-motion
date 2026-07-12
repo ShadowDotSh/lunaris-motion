@@ -5,15 +5,14 @@
 
 # Settings {{{
 
-custom_player_config=""
-custom_wallpaper_engine_dir=""
-rofi_theme="lunaris-motion-grid"
+LUNARIS_MOTION_PLAYER_CONFIG=""
+LUNARIS_MOTION_WALLPAPER_ENGINE_DIR=""
 # }}}
 
 # Default {{{
 
-cache_file="${XDG_CACHE_HOME:-${HOME}/.cache}/lunaris-motion"
-config_dir="${XDG_CONFIG_DIRS:-/etc/xdg}/lunaris-motion"
+LUNARIS_MOTION_CACHE_FILE="${XDG_CACHE_HOME:-${HOME}/.cache}/lunaris-motion"
+LUNARIS_MOTION_SYSTEM_DIR="${XDG_CONFIG_DIRS:-/etc/xdg}/lunaris-motion"
 # }}}
 
 # }}}
@@ -40,8 +39,8 @@ wallpaper_engine() {
     wallpaper_engine_dir="$HOME/.var/app/com.valvesoftware.Steam/.local/share/Steam/steamapps/workshop/content/431960"
 
   # Check for custom Steam
-  elif [[ -d "$custom_wallpaper_engine_dir" ]]; then
-    wallpaper_engine_dir="$custom_wallpaper_engine_dir"
+  elif [[ -d "$LUNARIS_MOTION_WALLPAPER_ENGINE_DIR" ]]; then
+    wallpaper_engine_dir="$LUNARIS_MOTION_WALLPAPER_ENGINE_DIR"
   
   # Exit if Wallpaper Engine is not found
   else
@@ -50,7 +49,7 @@ wallpaper_engine() {
   fi
 
   # Select Wallpaper
-  selected_wallpaper="$(rofi -config "$config_dir/$rofi_theme" -show recursivebrowser -normal-window \
+  selected_wallpaper="$(rofi -config "$LUNARIS_MOTION_SYSTEM_DIR/lunaris-motion-grid" -show recursivebrowser -normal-window \
     -recursivebrowser-directory "$wallpaper_engine_dir" -recursivebrowser-filter-regex "(.*\.json|.*\.gif|.*\.jpg|.*\.png)" 2>/dev/null)"
 
   # Exit if no wallpaper is selected
@@ -58,8 +57,8 @@ wallpaper_engine() {
     log "[ERROR]: No selected wallpaper"
     exit 1
   else
-    # Set wallpaper on cache_file
-    printf '%s' "$selected_wallpaper" > "$cache_file"
+    # Set wallpaper on LUNARIS_MOTION_CACHE_FILE
+    printf '%s' "$selected_wallpaper" > "$LUNARIS_MOTION_CACHE_FILE"
   fi
 }
 # }}}
@@ -74,9 +73,9 @@ player() {
     log "[INFO]: Killed old instances"
   fi
 
-  # Load wallpaper from cache_file
-  if [[ -f "$cache_file" ]]; then
-    wallpaper_file="$(<"$cache_file")"
+  # Load wallpaper from LUNARIS_MOTION_CACHE_FILE
+  if [[ -f "$LUNARIS_MOTION_CACHE_FILE" ]]; then
+    wallpaper_file="$(<"$LUNARIS_MOTION_CACHE_FILE")"
     log "[INFO]: Last video loaded from cache"
   else
     log "[ERROR]: No wallpaper loaded"
@@ -84,11 +83,11 @@ player() {
   fi
 
   # Load player configuration
-  if [[ -f "$custom_player_config/mpv.conf" ]]; then
-    player_config="$custom_player_config"
+  if [[ -f "$LUNARIS_MOTION_PLAYER_CONFIG/mpv.conf" ]]; then
+    player_config="$LUNARIS_MOTION_PLAYER_CONFIG"
     log "[INFO]: User player configuration loaded"
   else
-    player_config="$config_dir"
+    player_config="$LUNARIS_MOTION_SYSTEM_DIR"
     log "[INFO]: System player configuration loaded"
   fi
 
