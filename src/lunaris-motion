@@ -29,6 +29,7 @@ log() {
 # Wallpaper Engine {{{
 
 wallpaper_engine() {
+  local selected_wallpaper wallpaper_engine_dir
 
   # Check for system Steam
   if [[ -d "$HOME/.local/share/Steam/steamapps/workshop/content/431960"  ]]; then
@@ -66,6 +67,7 @@ wallpaper_engine() {
 # Player {{{
 
 player() {
+  local player_config wallpaper_file
 
   # Kill old instances
   if [[ "$(pgrep xwinwrap 2>/dev/null)" ]]; then
