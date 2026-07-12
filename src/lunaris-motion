@@ -1,0 +1,68 @@
+#!/usr/bin/env bash
+# vim:foldmethod=marker
+
+# Variables {{{
+
+# Settings {{{
+
+custom_wallpaper_engine_dir=""
+rofi_theme="lunaris-motion-grid"
+# }}}
+
+# Default {{{
+
+cache_file="${XDG_CACHE_HOME:-${HOME}/.cache}/lunaris-motion"
+config_dir="${XDG_CONFIG_DIRS:-/etc/xdg}/lunaris-motion"
+# }}}
+
+# }}}
+
+# Functions {{{
+
+# Log {{{
+
+log() {
+  printf '%s' "[$(date +'%Y-%m-%d %H:%M:%S')]: $*" >&2
+}
+# }}}
+
+# Wallpaper Engine {{{
+
+wallpaper_engine() {
+
+  # Check for system Steam
+  if [[ -d "$HOME/.local/share/Steam/steamapps/workshop/content/431960"  ]]; then
+    export wallpaper_engine_dir="$HOME/.local/share/Steam/steamapps/workshop/content/431960"
+
+  # Check for flatpak Steam
+  elif [[ -d "$HOME/.var/app/com.valvesoftware.Steam/.local/share/Steam/steamapps/workshop/content/431960" ]]; then
+    export wallpaper_engine_dir="$HOME/.var/app/com.valvesoftware.Steam/.local/share/Steam/steamapps/workshop/content/431960"
+
+  # Check for custom Steam
+  elif [[ -d "$custom_wallpaper_engine_dir" ]]; then
+    export wallpaper_engine_dir="$custom_wallpaper_engine_dir"
+  
+  # Exit if Wallpaper Engine is not found
+  else
+    log "[ERROR]: No Wallpaper Engine installation found"
+    exit 1
+  fi
+
+  # Select Wallpaper
+  selected_wallpaper="$(rofi -config "$config_dir/$rofi_theme" -show recursivebrowser -normal-window \
+    -recursivebrowser-directory "$wallpaper_engine_dir" -recursivebrowser-filter-regex "(.*\.json|.*\.gif|.*\.jpg|.*\.png)" 2>/dev/null)"
+
+  # Exit if no wallpaper is selected
+  if [[ -z "$selected_wallpaper" ]]; then
+    log "[ERROR]: No selected wallpaper"
+    exit 1
+  else
+    # Set wallpaper on cache_file
+    printf '%s' "$selected_wallpaper" > "$cache_file"
+  fi
+}
+# }}}
+
+# }}}
+
+wallpaper_engine
