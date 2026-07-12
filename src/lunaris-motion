@@ -101,7 +101,49 @@ player() {
 }
 # }}}
 
+# Help {{{
+
+show_help() {
+  cat << EOF
+USAGE:
+  <env> $0 <command>
+
+COMMANDS:
+  -we|--wallpaper-engine                Select video from Wallpaper Engine
+  -r|--restore                          Restore cached wallpaper
+
+  -h|--help                             Display this help message
+
+ENV:
+  LUNARIS_MOTION_PLAYER_CONFIG          Custom mpv configuration directory
+  LUNARIS_MOTION_WALLPAPER_ENGINE_DIR   Custom Wallpaper Engine installation directory
+
+EOF
+}
 # }}}
 
-wallpaper_engine
-player
+# }}}
+
+# Master {{{
+
+case "$1" in
+  -we|--wallpaper-engine)
+    wallpaper_engine
+    player
+  ;;
+  
+  -r|--restore)
+    player
+  ;;
+
+  -h|--help)
+    show_help
+    exit 0
+;;
+
+  *)
+    log "[ERROR]: Option not found, use -h or --help for help"
+    exit 1
+  ;;
+esac
+# }}}
