@@ -33,15 +33,15 @@ wallpaper_engine() {
 
   # Check for system Steam
   if [[ -d "$HOME/.local/share/Steam/steamapps/workshop/content/431960"  ]]; then
-    export wallpaper_engine_dir="$HOME/.local/share/Steam/steamapps/workshop/content/431960"
+    wallpaper_engine_dir="$HOME/.local/share/Steam/steamapps/workshop/content/431960"
 
   # Check for flatpak Steam
   elif [[ -d "$HOME/.var/app/com.valvesoftware.Steam/.local/share/Steam/steamapps/workshop/content/431960" ]]; then
-    export wallpaper_engine_dir="$HOME/.var/app/com.valvesoftware.Steam/.local/share/Steam/steamapps/workshop/content/431960"
+    wallpaper_engine_dir="$HOME/.var/app/com.valvesoftware.Steam/.local/share/Steam/steamapps/workshop/content/431960"
 
   # Check for custom Steam
   elif [[ -d "$custom_wallpaper_engine_dir" ]]; then
-    export wallpaper_engine_dir="$custom_wallpaper_engine_dir"
+    wallpaper_engine_dir="$custom_wallpaper_engine_dir"
   
   # Exit if Wallpaper Engine is not found
   else
