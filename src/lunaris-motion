@@ -13,6 +13,8 @@ LUNARIS_MOTION_WALLPAPER_ENGINE_DIR=""
 
 LUNARIS_MOTION_CACHE_FILE="${XDG_CACHE_HOME:-${HOME}/.cache}/lunaris-motion"
 LUNARIS_MOTION_SYSTEM_DIR="${XDG_CONFIG_DIRS:-/etc/xdg}/lunaris-motion"
+
+export LUNARIS_MOTION_SOCKET="${XDG_RUNTIME_DIR:-/run/user/${UID}}/lunaris-motion.sock"
 # }}}
 
 # }}}
@@ -71,6 +73,7 @@ player() {
 
   # Kill old instances
   if [[ "$(pgrep xwinwrap 2>/dev/null)" ]]; then
+    rm -f "$LUNARIS_MOTION_SOCKET"
     pkill xwinwrap
     log "[INFO]: Killed old instances"
   fi
@@ -95,9 +98,29 @@ player() {
 
   # Embed video
   xwinwrap -ni -fdt -fs -s -st -sp -b -nf -ovr -d -- \
-    mpv -wid WID "$wallpaper_file" --config-dir="$player_config" \
+    mpv -wid WID "$wallpaper_file" --config-dir="$player_config" --input-ipc-server="$LUNARIS_MOTION_SOCKET" \
     --fullscreen --panscan=1 --no-audio --loop \
     --input-default-bindings=no --input-cursor=no --osc=no --osd-level=0 --terminal=no 2>/dev/null
+}
+# }}}
+
+# Socket {{{
+player_play() {
+  if [[ -S "$LUNARIS_MOTION_SOCKET" ]]; then
+    printf '%s\n' '{ "command": ["set_property", "pause", false] }' | socat - UNIX-CONNECT:"$LUNARIS_MOTION_SOCKET" > /dev/null
+    log "[INFO]: Resume player"
+  else
+    log "[ERROR]: Socket missing"
+  fi
+}
+
+player_pause() {
+  if [[ -S "$LUNARIS_MOTION_SOCKET" ]]; then
+    printf '%s\n' '{ "command": ["set_property", "pause", true] }' | socat - UNIX-CONNECT:"$LUNARIS_MOTION_SOCKET" > /dev/null
+    log "[INFO]: Pause player"
+  else
+    log "[ERROR]: Socket missing"
+  fi
 }
 # }}}
 
@@ -111,6 +134,10 @@ USAGE:
 COMMANDS:
   -we|--wallpaper-engine                Select video from Wallpaper Engine
   -r|--restore                          Restore cached wallpaper
+
+  --play                                Resume player
+  --pause                               Pause player
+
 
   -h|--help                             Display this help message
 
@@ -134,6 +161,14 @@ case "$1" in
   
   -r|--restore)
     player
+  ;;
+
+  --play)
+    player_play
+  ;;
+
+  --pause)
+    player_pause
   ;;
 
   -h|--help)
