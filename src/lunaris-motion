@@ -96,7 +96,7 @@ player() {
   xwinwrap -ni -fdt -fs -s -st -sp -b -nf -ovr -d -- \
     mpv -wid WID "$wallpaper_file" --config-dir="$player_config" \
     --fullscreen --panscan=1 --no-audio --loop \
-    --input-default-bindings=no --input-cursor=no --osc=no --osd-level=0 --terminal=no
+    --input-default-bindings=no --input-cursor=no --osc=no --osd-level=0 --terminal=no 2>/dev/null
 }
 # }}}
 
