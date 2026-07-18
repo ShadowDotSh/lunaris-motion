@@ -70,14 +70,6 @@ wallpaper_engine() {
 player() {
   local player_config wallpaper_file
 
-  # Kill old instances
-  if [[ "$(pgrep xwinwrap 2>/dev/null)" ]]; then
-    rm -f "$LUNARIS_MOTION_SOCKET"
-    pkill xwinwrap
-    pkill -f "$LUNARIS_MOTION_SYSTEM_DIR/lunaris-motion-daemon.sh"
-    log "[INFO]: Killed old instances"
-  fi
-
   # Load wallpaper from LUNARIS_MOTION_CACHE_FILE
   if [[ -f "$LUNARIS_MOTION_CACHE_FILE" ]]; then
     wallpaper_file="$(<"$LUNARIS_MOTION_CACHE_FILE")"
@@ -101,6 +93,14 @@ player() {
     mpv -wid WID "$wallpaper_file" --config-dir="$player_config" --input-ipc-server="$LUNARIS_MOTION_SOCKET" \
     --fullscreen --panscan=1 --no-audio --loop \
     --input-default-bindings=no --input-cursor=no --osc=no --osd-level=0 --terminal=no 2>/dev/null
+}
+
+cleanup() {
+  # Kill old instances
+  pkill xwinwrap
+  pkill -f "$LUNARIS_MOTION_SYSTEM_DIR/lunaris-motion-daemon.sh"
+  rm -f "$LUNARIS_MOTION_SOCKET"
+  log "[INFO]: Killed old instances"
 }
 # }}}
 
@@ -147,6 +147,7 @@ COMMANDS:
 
   --play                                Resume player
   --pause                               Pause player
+  -k|--kill                             Kill running player
 
 
   -h|--help                             Display this help message
@@ -166,16 +167,19 @@ EOF
 case "$1" in
   -we|--wallpaper-engine)
     wallpaper_engine
+    cleanup
     player
     daemon
   ;;
   
   -r|--restore)
+    cleanup
     player
     daemon
   ;;
 
   -d|--daemonless)
+    cleanup
     player
     log "[INFO]: Start player daemonless"
   ;;
@@ -186,6 +190,10 @@ case "$1" in
 
   --pause)
     player_pause
+  ;;
+
+  -k|--kill)
+    cleanup
   ;;
 
   -h|--help)
