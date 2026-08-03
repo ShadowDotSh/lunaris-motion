@@ -11,9 +11,9 @@ LUNARIS_MOTION_WORKSHOP_DIR=""
 
 # Default {{{
 
-LUNARIS_MOTION_CACHE_FILE="${XDG_CACHE_HOME:-${HOME}/.cache}/lunaris-motion"
-LUNARIS_MOTION_SOCKET="${XDG_RUNTIME_DIR:-/run/user/${UID}}/lunaris-motion.sock"
-LUNARIS_MOTION_SYSTEM_DIR="${XDG_CONFIG_DIRS:-/etc/xdg}/lunaris-motion"
+LUNARIS_MOTION_CACHE_FILE="$HOME/.cache/lunaris-motion"
+LUNARIS_MOTION_SOCKET="/run/user/$UID/lunaris-motion.sock"
+LUNARIS_MOTION_SYSTEM_DIR="/etc/xdg/lunaris-motion"
 # }}}
 
 # }}}
