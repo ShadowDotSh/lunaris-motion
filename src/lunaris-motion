@@ -37,8 +37,8 @@ workshop() {
 	local selected_wallpaper workshop_dir
 
 	# Check for workshop
-	if [[ -d "$LUNARIS_MOTION_WORKSHOP_DIR" ]]; then
-		workshop_dir="$LUNARIS_MOTION_WORKSHOP_DIR"
+	if [[ -d "$LUNARIS_MOTION_CONFIG_WORKSHOP_DIR" ]]; then
+		workshop_dir="$LUNARIS_MOTION_CONFIG_WORKSHOP_DIR"
 	elif [[ -d "$HOME/.local/share/Steam/steamapps/workshop/content/431960" ]]; then
 		workshop_dir="$HOME/.local/share/Steam/steamapps/workshop/content/431960"
 	elif [[ -d "$HOME/.var/app/com.valvesoftware.Steam/.local/share/Steam/steamapps/workshop/content/431960" ]]; then

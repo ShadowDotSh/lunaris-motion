@@ -1,5 +1,5 @@
 # Custom workshop directory
-LUNARIS_MOTION_WORKSHOP_DIR=""
+LUNARIS_MOTION_CONFIG_WORKSHOP_DIR=""
 
 # Custom player config directory
 LUNARIS_MOTION_PLAYER_CONFIG=""
