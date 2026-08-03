@@ -63,6 +63,38 @@ workshop() {
 }
 # }}}
 
+# Local {{{
+
+local_video() {
+	local selected_wallpaper video_dir
+
+	# Check for video directory
+	if [[ -d "$LUNARIS_MOTION_CONFIG_VIDEO_DIR" ]]; then
+		video_dir="$LUNARIS_MOTION_CONFIG_VIDEO_DIR"
+	elif [[ -d "$(xdg-user-dir VIDEOS)/lunaris-motion" ]]; then
+		video_dir="$(xdg-user-dir VIDEOS)/lunaris-motion"
+	elif [[ -d "$HOME/Videos/lunaris-motion" ]]; then
+		video_dir="$HOME/Videos/lunaris-motion"
+	else
+		log "[ERROR]: Video directory not found"
+		exit 1
+	fi
+
+	# Select Wallpaper
+	selected_wallpaper="$(rofi -no-config -normal-window -show-icons -theme "$LUNARIS_MOTION_SYSTEM_DIR/lunaris-motion-list" \
+		-show filebrowser -filebrowser-directory "$video_dir" -filebrowser-sorting-method "name" -filebrowser-directories-first true -filebrowser-show-hidden true -filebrowser-command "printf '%s\n'" 2>/dev/null)"
+
+	# Exit if no wallpaper is selected
+	if [[ -z "$selected_wallpaper" ]]; then
+		log "[ERROR]: No selected wallpaper"
+		exit 1
+	else
+		# Set wallpaper on cache
+		printf '%s' "$selected_wallpaper" >"$LUNARIS_MOTION_CACHE_FILE"
+	fi
+}
+# }}}
+
 # Player {{{
 
 player() {
@@ -140,6 +172,7 @@ USAGE:
 
 COMMANDS:
   -w|--workshop                					Select video from workshop
+  -v|--video              							Select video from local directory
   -r|--restore                          Restore cached wallpaper with daemon
   -dls|--daemonless                     Restore cached wallpaper without daemon
 
@@ -162,6 +195,14 @@ case "$1" in
 -w | --workshop)
 	user_config
 	workshop
+	cleanup
+	player
+	daemon
+	;;
+
+-v | --video)
+	user_config
+	local_video
 	cleanup
 	player
 	daemon
