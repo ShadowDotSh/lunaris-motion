@@ -3,19 +3,10 @@
 
 # Variables {{{
 
-# Settings {{{
-
-LUNARIS_MOTION_PLAYER_CONFIG=""
-LUNARIS_MOTION_WORKSHOP_DIR=""
-# }}}
-
-# Default {{{
-
 LUNARIS_MOTION_CACHE_FILE="$HOME/.cache/lunaris-motion"
-LUNARIS_MOTION_SOCKET="/run/user/$UID/lunaris-motion.sock"
+LUNARIS_MOTION_CONFIG_FILE="$HOME/.config/lunaris-motion/config"
+LUNARIS_MOTION_SOCKET_FILE="/run/user/$UID/lunaris-motion.sock"
 LUNARIS_MOTION_SYSTEM_DIR="/etc/xdg/lunaris-motion"
-# }}}
-
 # }}}
 
 # Functions {{{
@@ -27,18 +18,31 @@ log() {
 }
 # }}}
 
+# Configuration {{{
+
+user_config() {
+	if [[ -f "$LUNARIS_MOTION_CONFIG_FILE" ]]; then
+		# shellcheck disable=SC1090
+		source "$LUNARIS_MOTION_CONFIG_FILE"
+		log "[INFO]: Using user configuration"
+	else
+		log "[INFO]: Using default configuration"
+	fi
+}
+# }}}
+
 # Workshop {{{
 
 workshop() {
 	local selected_wallpaper workshop_dir
 
 	# Check for workshop
-	if [[ -d "$HOME/.local/share/Steam/steamapps/workshop/content/431960" ]]; then
+	if [[ -d "$LUNARIS_MOTION_WORKSHOP_DIR" ]]; then
+		workshop_dir="$LUNARIS_MOTION_WORKSHOP_DIR"
+	elif [[ -d "$HOME/.local/share/Steam/steamapps/workshop/content/431960" ]]; then
 		workshop_dir="$HOME/.local/share/Steam/steamapps/workshop/content/431960"
 	elif [[ -d "$HOME/.var/app/com.valvesoftware.Steam/.local/share/Steam/steamapps/workshop/content/431960" ]]; then
 		workshop_dir="$HOME/.var/app/com.valvesoftware.Steam/.local/share/Steam/steamapps/workshop/content/431960"
-	elif [[ -d "$LUNARIS_MOTION_WORKSHOP_DIR" ]]; then
-		workshop_dir="$LUNARIS_MOTION_WORKSHOP_DIR"
 	else
 		log "[ERROR]: Workshop installation not found"
 		exit 1
@@ -84,7 +88,7 @@ player() {
 
 	# Embed video
 	xwinwrap -ni -fdt -fs -s -st -sp -b -nf -ovr -d -- \
-		mpv -wid WID "$wallpaper_file" --config-dir="$player_config" --input-ipc-server="$LUNARIS_MOTION_SOCKET" \
+		mpv -wid WID "$wallpaper_file" --config-dir="$player_config" --input-ipc-server="$LUNARIS_MOTION_SOCKET_FILE" \
 		--fullscreen --panscan=1 --no-audio --loop \
 		--input-default-bindings=no --input-cursor=no --osc=no --osd-level=0 --terminal=no 2>/dev/null
 }
@@ -93,7 +97,7 @@ cleanup() {
 	# Kill old instances
 	pkill xwinwrap
 	pkill -f "$LUNARIS_MOTION_SYSTEM_DIR/lunaris-motion-daemon.sh"
-	rm -f "$LUNARIS_MOTION_SOCKET"
+	rm -f "$LUNARIS_MOTION_SOCKET_FILE"
 	log "[INFO]: Killed old instances"
 }
 # }}}
@@ -101,8 +105,8 @@ cleanup() {
 # Socket {{{
 
 player_play() {
-	if [[ -S "$LUNARIS_MOTION_SOCKET" ]]; then
-		printf '%s\n' '{ "command": ["set_property", "pause", false] }' | socat - UNIX-CONNECT:"$LUNARIS_MOTION_SOCKET" >/dev/null
+	if [[ -S "$LUNARIS_MOTION_SOCKET_FILE" ]]; then
+		printf '%s\n' '{ "command": ["set_property", "pause", false] }' | socat - UNIX-CONNECT:"$LUNARIS_MOTION_SOCKET_FILE" >/dev/null
 		log "[INFO]: Resume player"
 	else
 		log "[ERROR]: Socket missing"
@@ -110,8 +114,8 @@ player_play() {
 }
 
 player_pause() {
-	if [[ -S "$LUNARIS_MOTION_SOCKET" ]]; then
-		printf '%s\n' '{ "command": ["set_property", "pause", true] }' | socat - UNIX-CONNECT:"$LUNARIS_MOTION_SOCKET" >/dev/null
+	if [[ -S "$LUNARIS_MOTION_SOCKET_FILE" ]]; then
+		printf '%s\n' '{ "command": ["set_property", "pause", true] }' | socat - UNIX-CONNECT:"$LUNARIS_MOTION_SOCKET_FILE" >/dev/null
 		log "[INFO]: Pause player"
 	else
 		log "[ERROR]: Socket missing"
@@ -146,10 +150,6 @@ COMMANDS:
 
   -h|--help                             Display this help message
 
-ENV:
-  LUNARIS_MOTION_PLAYER_CONFIG          Custom mpv configuration directory
-  LUNARIS_MOTION_WORKSHOP_DIR   				Custom workshop installation directory
-
 EOF
 }
 # }}}
@@ -160,6 +160,7 @@ EOF
 
 case "$1" in
 -w | --workshop)
+	user_config
 	workshop
 	cleanup
 	player
@@ -167,12 +168,14 @@ case "$1" in
 	;;
 
 -r | --restore)
+	user_config
 	cleanup
 	player
 	daemon
 	;;
 
 -d | --daemonless)
+	user_config
 	cleanup
 	player
 	log "[INFO]: Start player daemonless"
