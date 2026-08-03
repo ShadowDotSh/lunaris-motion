@@ -1,27 +1,4 @@
 // vim:foldmethod=marker
-
-// Config {{{
-
-configuration {
-  modi:               "filebrowser,recursivebrowser";
-  show-icons:         true;
-  disable-history:    true;
-
-  filebrowser {
-    sorting-method:       "name";
-    command:              "printf '%s\n'";
-    directories-first:    true;
-    show-hidden:          true;
-  }
-
-  recursivebrowser {
-    command:    "printf '%s\n'";
-  }
-}
-// }}}
-
-// Theme {{{
-
 @theme "/dev/null"
 
 // Set {{{
@@ -136,6 +113,4 @@ scrollbar{
   background-color:   transparent;
   handle-color:       @accent;
 }
-// }}}
-
 // }}}

@@ -49,8 +49,8 @@ workshop() {
 	fi
 
 	# Select Wallpaper
-	selected_wallpaper="$(rofi -config "$LUNARIS_MOTION_SYSTEM_DIR/lunaris-motion-grid" -show recursivebrowser -normal-window \
-		-recursivebrowser-directory "$workshop_dir" -recursivebrowser-filter-regex "(.*\.json|.*\.gif|.*\.jpg|.*\.png)" 2>/dev/null)"
+	selected_wallpaper="$(rofi -no-config -normal-window -show-icons -theme "$LUNARIS_MOTION_SYSTEM_DIR/lunaris-motion-grid" \
+		-show recursivebrowser -recursivebrowser-directory "$workshop_dir" -recursivebrowser-filter-regex "(.*\.json|.*\.gif|.*\.jpg|.*\.png)" -recursivebrowser-command "printf '%s\n'" 2>/dev/null)"
 
 	# Exit if no wallpaper is selected
 	if [[ -z "$selected_wallpaper" ]]; then
