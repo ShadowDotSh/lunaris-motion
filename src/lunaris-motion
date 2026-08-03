@@ -6,7 +6,7 @@
 # Settings {{{
 
 LUNARIS_MOTION_PLAYER_CONFIG=""
-LUNARIS_MOTION_WALLPAPER_ENGINE_DIR=""
+LUNARIS_MOTION_WORKSHOP_DIR=""
 # }}}
 
 # Default {{{
@@ -23,125 +23,119 @@ LUNARIS_MOTION_SYSTEM_DIR="${XDG_CONFIG_DIRS:-/etc/xdg}/lunaris-motion"
 # Log {{{
 
 log() {
-  echo "[$(date +'%Y-%m-%d %H:%M:%S')]: $*" >&2
+	echo "[$(date +'%Y-%m-%d %H:%M:%S')]: $*" >&2
 }
 # }}}
 
-# Wallpaper Engine {{{
+# Workshop {{{
 
-wallpaper_engine() {
-  local selected_wallpaper wallpaper_engine_dir
+workshop() {
+	local selected_wallpaper workshop_dir
 
-  # Check for system Steam
-  if [[ -d "$HOME/.local/share/Steam/steamapps/workshop/content/431960"  ]]; then
-    wallpaper_engine_dir="$HOME/.local/share/Steam/steamapps/workshop/content/431960"
+	# Check for workshop
+	if [[ -d "$HOME/.local/share/Steam/steamapps/workshop/content/431960" ]]; then
+		workshop_dir="$HOME/.local/share/Steam/steamapps/workshop/content/431960"
+	elif [[ -d "$HOME/.var/app/com.valvesoftware.Steam/.local/share/Steam/steamapps/workshop/content/431960" ]]; then
+		workshop_dir="$HOME/.var/app/com.valvesoftware.Steam/.local/share/Steam/steamapps/workshop/content/431960"
+	elif [[ -d "$LUNARIS_MOTION_WORKSHOP_DIR" ]]; then
+		workshop_dir="$LUNARIS_MOTION_WORKSHOP_DIR"
+	else
+		log "[ERROR]: Workshop installation not found"
+		exit 1
+	fi
 
-  # Check for flatpak Steam
-  elif [[ -d "$HOME/.var/app/com.valvesoftware.Steam/.local/share/Steam/steamapps/workshop/content/431960" ]]; then
-    wallpaper_engine_dir="$HOME/.var/app/com.valvesoftware.Steam/.local/share/Steam/steamapps/workshop/content/431960"
+	# Select Wallpaper
+	selected_wallpaper="$(rofi -config "$LUNARIS_MOTION_SYSTEM_DIR/lunaris-motion-grid" -show recursivebrowser -normal-window \
+		-recursivebrowser-directory "$workshop_dir" -recursivebrowser-filter-regex "(.*\.json|.*\.gif|.*\.jpg|.*\.png)" 2>/dev/null)"
 
-  # Check for custom Steam
-  elif [[ -d "$LUNARIS_MOTION_WALLPAPER_ENGINE_DIR" ]]; then
-    wallpaper_engine_dir="$LUNARIS_MOTION_WALLPAPER_ENGINE_DIR"
-  
-  # Exit if Wallpaper Engine is not found
-  else
-    log "[ERROR]: No Wallpaper Engine installation found"
-    exit 1
-  fi
-
-  # Select Wallpaper
-  selected_wallpaper="$(rofi -config "$LUNARIS_MOTION_SYSTEM_DIR/lunaris-motion-grid" -show recursivebrowser -normal-window \
-    -recursivebrowser-directory "$wallpaper_engine_dir" -recursivebrowser-filter-regex "(.*\.json|.*\.gif|.*\.jpg|.*\.png)" 2>/dev/null)"
-
-  # Exit if no wallpaper is selected
-  if [[ -z "$selected_wallpaper" ]]; then
-    log "[ERROR]: No selected wallpaper"
-    exit 1
-  else
-    # Set wallpaper on LUNARIS_MOTION_CACHE_FILE
-    printf '%s' "$selected_wallpaper" > "$LUNARIS_MOTION_CACHE_FILE"
-  fi
+	# Exit if no wallpaper is selected
+	if [[ -z "$selected_wallpaper" ]]; then
+		log "[ERROR]: No selected wallpaper"
+		exit 1
+	else
+		# Set wallpaper on cache
+		printf '%s' "$selected_wallpaper" >"$LUNARIS_MOTION_CACHE_FILE"
+	fi
 }
 # }}}
 
 # Player {{{
 
 player() {
-  local player_config wallpaper_file
+	local player_config wallpaper_file
 
-  # Load wallpaper from LUNARIS_MOTION_CACHE_FILE
-  if [[ -f "$LUNARIS_MOTION_CACHE_FILE" ]]; then
-    wallpaper_file="$(<"$LUNARIS_MOTION_CACHE_FILE")"
-    log "[INFO]: Last video loaded from cache"
-  else
-    log "[ERROR]: No wallpaper loaded"
-    exit 1
-  fi
+	# Load wallpaper from cache
+	if [[ -f "$LUNARIS_MOTION_CACHE_FILE" ]]; then
+		wallpaper_file="$(<"$LUNARIS_MOTION_CACHE_FILE")"
+		log "[INFO]: Last video loaded from cache"
+	else
+		log "[ERROR]: No wallpaper loaded"
+		exit 1
+	fi
 
-  # Load player configuration
-  if [[ -f "$LUNARIS_MOTION_PLAYER_CONFIG/mpv.conf" ]]; then
-    player_config="$LUNARIS_MOTION_PLAYER_CONFIG"
-    log "[INFO]: User player configuration loaded"
-  else
-    player_config="$LUNARIS_MOTION_SYSTEM_DIR"
-    log "[INFO]: System player configuration loaded"
-  fi
+	# Load player configuration
+	if [[ -f "$LUNARIS_MOTION_PLAYER_CONFIG/mpv.conf" ]]; then
+		player_config="$LUNARIS_MOTION_PLAYER_CONFIG"
+		log "[INFO]: User player configuration loaded"
+	else
+		player_config="$LUNARIS_MOTION_SYSTEM_DIR"
+		log "[INFO]: System player configuration loaded"
+	fi
 
-  # Embed video
-  xwinwrap -ni -fdt -fs -s -st -sp -b -nf -ovr -d -- \
-    mpv -wid WID "$wallpaper_file" --config-dir="$player_config" --input-ipc-server="$LUNARIS_MOTION_SOCKET" \
-    --fullscreen --panscan=1 --no-audio --loop \
-    --input-default-bindings=no --input-cursor=no --osc=no --osd-level=0 --terminal=no 2>/dev/null
+	# Embed video
+	xwinwrap -ni -fdt -fs -s -st -sp -b -nf -ovr -d -- \
+		mpv -wid WID "$wallpaper_file" --config-dir="$player_config" --input-ipc-server="$LUNARIS_MOTION_SOCKET" \
+		--fullscreen --panscan=1 --no-audio --loop \
+		--input-default-bindings=no --input-cursor=no --osc=no --osd-level=0 --terminal=no 2>/dev/null
 }
 
 cleanup() {
-  # Kill old instances
-  pkill xwinwrap
-  pkill -f "$LUNARIS_MOTION_SYSTEM_DIR/lunaris-motion-daemon.sh"
-  rm -f "$LUNARIS_MOTION_SOCKET"
-  log "[INFO]: Killed old instances"
+	# Kill old instances
+	pkill xwinwrap
+	pkill -f "$LUNARIS_MOTION_SYSTEM_DIR/lunaris-motion-daemon.sh"
+	rm -f "$LUNARIS_MOTION_SOCKET"
+	log "[INFO]: Killed old instances"
 }
 # }}}
 
 # Socket {{{
 
 player_play() {
-  if [[ -S "$LUNARIS_MOTION_SOCKET" ]]; then
-    printf '%s\n' '{ "command": ["set_property", "pause", false] }' | socat - UNIX-CONNECT:"$LUNARIS_MOTION_SOCKET" > /dev/null
-    log "[INFO]: Resume player"
-  else
-    log "[ERROR]: Socket missing"
-  fi
+	if [[ -S "$LUNARIS_MOTION_SOCKET" ]]; then
+		printf '%s\n' '{ "command": ["set_property", "pause", false] }' | socat - UNIX-CONNECT:"$LUNARIS_MOTION_SOCKET" >/dev/null
+		log "[INFO]: Resume player"
+	else
+		log "[ERROR]: Socket missing"
+	fi
 }
 
 player_pause() {
-  if [[ -S "$LUNARIS_MOTION_SOCKET" ]]; then
-    printf '%s\n' '{ "command": ["set_property", "pause", true] }' | socat - UNIX-CONNECT:"$LUNARIS_MOTION_SOCKET" > /dev/null
-    log "[INFO]: Pause player"
-  else
-    log "[ERROR]: Socket missing"
-  fi
+	if [[ -S "$LUNARIS_MOTION_SOCKET" ]]; then
+		printf '%s\n' '{ "command": ["set_property", "pause", true] }' | socat - UNIX-CONNECT:"$LUNARIS_MOTION_SOCKET" >/dev/null
+		log "[INFO]: Pause player"
+	else
+		log "[ERROR]: Socket missing"
+	fi
 }
 # }}}
 
 # Slave {{{
 
 daemon() {
-  # Start daemon
-  nohup "$LUNARIS_MOTION_SYSTEM_DIR/lunaris-motion-daemon.sh" > /dev/null 2>&1 &
+	# Start daemon
+	nohup "$LUNARIS_MOTION_SYSTEM_DIR/lunaris-motion-daemon.sh" >/dev/null 2>&1 &
 }
 # }}}
 
 # Help {{{
 
 show_help() {
-  cat << EOF
+	cat <<EOF
 USAGE:
   <env> $0 <command>
 
 COMMANDS:
-  -we|--wallpaper-engine                Select video from Wallpaper Engine
+  -w|--workshop                					Select video from workshop
   -r|--restore                          Restore cached wallpaper with daemon
   -dls|--daemonless                     Restore cached wallpaper without daemon
 
@@ -154,7 +148,7 @@ COMMANDS:
 
 ENV:
   LUNARIS_MOTION_PLAYER_CONFIG          Custom mpv configuration directory
-  LUNARIS_MOTION_WALLPAPER_ENGINE_DIR   Custom Wallpaper Engine installation directory
+  LUNARIS_MOTION_WORKSHOP_DIR   				Custom workshop installation directory
 
 EOF
 }
@@ -165,45 +159,45 @@ EOF
 # Master {{{
 
 case "$1" in
-  -we|--wallpaper-engine)
-    wallpaper_engine
-    cleanup
-    player
-    daemon
-  ;;
-  
-  -r|--restore)
-    cleanup
-    player
-    daemon
-  ;;
+-w | --workshop)
+	workshop
+	cleanup
+	player
+	daemon
+	;;
 
-  -d|--daemonless)
-    cleanup
-    player
-    log "[INFO]: Start player daemonless"
-  ;;
+-r | --restore)
+	cleanup
+	player
+	daemon
+	;;
 
-  --play)
-    player_play
-  ;;
+-d | --daemonless)
+	cleanup
+	player
+	log "[INFO]: Start player daemonless"
+	;;
 
-  --pause)
-    player_pause
-  ;;
+--play)
+	player_play
+	;;
 
-  -k|--kill)
-    cleanup
-  ;;
+--pause)
+	player_pause
+	;;
 
-  -h|--help)
-    show_help
-    exit 0
-  ;;
+-k | --kill)
+	cleanup
+	;;
 
-  *)
-    log "[ERROR]: Option not found, use -h or --help for help"
-    exit 1
-  ;;
+-h | --help)
+	show_help
+	exit 0
+	;;
+
+*)
+	log "[ERROR]: Option not found, use -h or --help for help"
+	exit 1
+	;;
 esac
 # }}}
