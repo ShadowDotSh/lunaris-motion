@@ -174,7 +174,7 @@ COMMANDS:
   -w|--workshop                					Select video from workshop
   -v|--video              							Select video from local directory
   -r|--restore                          Restore cached wallpaper with daemon
-  -dls|--daemonless                     Restore cached wallpaper without daemon
+  -d|--daemonless                     	Restore cached wallpaper without daemon
 
   --play                                Resume player
   --pause                               Pause player
