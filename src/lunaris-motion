@@ -163,6 +163,59 @@ daemon() {
 }
 # }}}
 
+# Menu {{{
+
+menu() {
+	local rofi_menu
+
+	# Display menu
+	rofi_menu="$(printf '󰓓 Workshop\n󰈫 Video\n󰦛 Restore\n󱨘 Daemonless\n󰐌 Play\n󰏥 Pause\n󰰱 Kill' | rofi -dmenu -sync -i -p ' Lunaris-Motion:')"
+
+	case "$rofi_menu" in
+	"󰓓 Workshop")
+		user_config
+		workshop
+		cleanup
+		player
+		daemon
+		;;
+
+	"󰈫 Video")
+		user_config
+		local_video
+		cleanup
+		player
+		daemon
+		;;
+
+	"󰦛 Restore")
+		user_config
+		cleanup
+		player
+		daemon
+		;;
+
+	"󱨘 Daemonless")
+		user_config
+		cleanup
+		player
+		;;
+
+	"󰐌 Play")
+		player_play
+		;;
+
+	"󰏥 Pause")
+		player_pause
+		;;
+
+	"󰰱 Kill")
+		cleanup
+		;;
+	esac
+}
+# }}}
+
 # Help {{{
 
 show_help() {
@@ -232,6 +285,10 @@ case "$1" in
 
 -k | --kill)
 	cleanup
+	;;
+
+-m | --menu)
+	menu
 	;;
 
 -h | --help)
