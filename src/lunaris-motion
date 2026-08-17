@@ -6,7 +6,7 @@
 LUNARIS_MOTION_CACHE_FILE="$HOME/.cache/lunaris-motion"
 LUNARIS_MOTION_CONFIG_FILE="$HOME/.config/lunaris-motion/config"
 LUNARIS_MOTION_SOCKET_FILE="/run/user/$UID/lunaris-motion.sock"
-LUNARIS_MOTION_SYSTEM_DIR="/etc/xdg/lunaris-motion"
+LUNARIS_MOTION_SYSTEM_DIR="/etc/lunaris/motion"
 # }}}
 
 # Functions {{{
