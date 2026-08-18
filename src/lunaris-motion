@@ -106,8 +106,8 @@ player() {
 	# Check for mpv config
 	if [[ -f "$LUNARIS_MOTION_PLAYER_CONFIG/mpv.conf" ]]; then
 		player_config="$LUNARIS_MOTION_PLAYER_CONFIG"
-	elif [[ -f "$LUNARIS_MOTION_SYSTEM_DIR/mpv.conf" ]]; then
-		player_config="$LUNARIS_MOTION_SYSTEM_DIR"
+	elif [[ -f "$LUNARIS_MOTION_SYSTEM_DIR/mpv/mpv.conf" ]]; then
+		player_config="$LUNARIS_MOTION_SYSTEM_DIR/mpv"
 	else
 		log "[ERROR]: Mpv configuration is missing"
 	fi
@@ -125,10 +125,10 @@ player() {
 		cleanup
 
 		# Start new player
-		xwinwrap -ni -fdt -fs -s -st -sp -b -nf -ovr -d -- \
-			mpv -wid WID "$LUNARIS_MOTION_FILE" --config-dir="$player_config" --input-ipc-server="$LUNARIS_MOTION_SOCKET_FILE" \
+		xwinwrap -b -d -fdt -fs -nf -ovr -s -sp -st -- \
+			mpv -wid WID "$LUNARIS_MOTION_FILE" --config-dir="$player_config" --input-ipc-server="$LUNARIS_MOTION_SOCKET_FILE" --script="$LUNARIS_MOTION_SYSTEM_DIR/mpv/lunaris-motion.lua" \
 			--fullscreen --panscan=1 --no-audio --loop \
-			--input-default-bindings=no --input-cursor=no --osc=no --osd-level=0 --terminal=no 2>/dev/null
+			--input-default-bindings=no --osc=no --osd-level=0 --terminal=no 2>/dev/null
 	fi
 }
 
