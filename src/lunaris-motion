@@ -3,10 +3,10 @@
 
 # Variables {{{
 
-LUNARIS_MOTION_CACHE_FILE="$HOME/.cache/lunaris-motion"
+LUNARIS_MOTION_CACHE_DIR="$HOME/.cache/lunaris/motion"
+LUNARIS_MOTION_SYSTEM_DIR="/etc/lunaris/motion"
 LUNARIS_MOTION_CONFIG_FILE="$HOME/.config/lunaris/motion.sh"
 LUNARIS_MOTION_SOCKET_FILE="/run/user/$UID/lunaris-motion.sock"
-LUNARIS_MOTION_SYSTEM_DIR="/etc/lunaris/motion"
 # }}}
 
 # Log {{{
@@ -17,6 +17,9 @@ log() {
 # }}}
 
 # Configuration {{{
+
+# Create directories
+mkdir -p "$LUNARIS_MOTION_CACHE_DIR"
 
 # Check for user configuration
 if [[ -f "$LUNARIS_MOTION_CONFIG_FILE" ]]; then
@@ -53,7 +56,7 @@ workshop() {
 	[[ -z "$selected_workshop_file" ]] && exit 0
 
 	# Save selection on cache
-	printf '%s\n' "LUNARIS_MOTION_FILE=\"$selected_workshop_file\"" >"$LUNARIS_MOTION_CACHE_FILE"
+	printf '%s\n' "LUNARIS_MOTION_FILE=\"$selected_workshop_file\"" >"$LUNARIS_MOTION_CACHE_DIR/last"
 }
 # }}}
 
@@ -82,7 +85,7 @@ local_video() {
 	[[ -z "$selected_video_file" ]] && exit 0
 
 	# Save selection on cache
-	printf '%s\n' "LUNARIS_MOTION_FILE=\"$selected_video_file\"" >"$LUNARIS_MOTION_CACHE_FILE"
+	printf '%s\n' "LUNARIS_MOTION_FILE=\"$selected_video_file\"" >"$LUNARIS_MOTION_CACHE_DIR/last"
 }
 # }}}
 
@@ -92,9 +95,9 @@ player() {
 	local player_config
 
 	# Source cached selection
-	if [[ -f "$LUNARIS_MOTION_CACHE_FILE" ]]; then
-		# shellcheck disable=SC1090
-		source "$LUNARIS_MOTION_CACHE_FILE"
+	if [[ -f "$LUNARIS_MOTION_CACHE_DIR/last" ]]; then
+		# shellcheck disable=SC1091
+		source "$LUNARIS_MOTION_CACHE_DIR/last"
 	else
 		log "[ERROR]: Cached selection is missing "
 		exit 1
@@ -139,11 +142,24 @@ cleanup() {
 # Socket {{{
 
 player_play() {
-	printf '%s\n' '{ "command": ["set_property", "pause", false] }' | socat - UNIX-CONNECT:"$LUNARIS_MOTION_SOCKET_FILE" >/dev/null
+	# Resume player
+	if [[ -S "$LUNARIS_MOTION_SOCKET_FILE" ]]; then
+		printf '%s\n' '{ "command": ["set_property", "pause", false] }' | socat - UNIX-CONNECT:"$LUNARIS_MOTION_SOCKET_FILE" >/dev/null
+	else
+		return 1
+	fi
 }
 
 player_pause() {
-	printf '%s\n' '{ "command": ["set_property", "pause", true] }' | socat - UNIX-CONNECT:"$LUNARIS_MOTION_SOCKET_FILE" >/dev/null
+	# Pause player
+	if [[ -S "$LUNARIS_MOTION_SOCKET_FILE" ]]; then
+		printf '%s\n' '{ "command": ["set_property", "pause", true] }' | socat - UNIX-CONNECT:"$LUNARIS_MOTION_SOCKET_FILE" >/dev/null
+	else
+		return 1
+	fi
+
+	# Extract frame
+	extract_frame
 }
 # }}}
 
