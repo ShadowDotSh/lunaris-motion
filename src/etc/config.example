@@ -6,3 +6,6 @@ LUNARIS_MOTION_CONFIG_PLAYER=""
 
 # Custom video directory
 LUNARIS_MOTION_CONFIG_VIDEO_DIR=""
+
+# Set static wallpaper on quit
+LUNARIS_MOTION_CONFIG_APPLY_STATIC=""

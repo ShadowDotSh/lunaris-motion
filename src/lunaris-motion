@@ -6,6 +6,7 @@
 LUNARIS_MOTION_CACHE_DIR="$HOME/.cache/lunaris/motion"
 LUNARIS_MOTION_SYSTEM_DIR="/etc/lunaris/motion"
 LUNARIS_MOTION_CONFIG_FILE="$HOME/.config/lunaris/motion.sh"
+LUNARIS_MOTION_FRAME_FILE="$LUNARIS_MOTION_CACHE_DIR/frame.png"
 LUNARIS_MOTION_SOCKET_FILE="/run/user/$UID/lunaris-motion.sock"
 # }}}
 
@@ -141,6 +142,16 @@ cleanup() {
 
 # Socket {{{
 
+extract_frame() {
+	# Save frame on disk
+	if [[ -S "$LUNARIS_MOTION_SOCKET_FILE" ]]; then
+		printf '{"command": ["screenshot-to-file", "%s", "video"]}\n' "$LUNARIS_MOTION_FRAME_FILE" | socat - UNIX-CONNECT:"$LUNARIS_MOTION_SOCKET_FILE" >/dev/null
+	else
+		log "[ERROR]: Frame extraction failed"
+		return 1
+	fi
+}
+
 player_play() {
 	# Resume player
 	if [[ -S "$LUNARIS_MOTION_SOCKET_FILE" ]]; then
@@ -157,9 +168,6 @@ player_pause() {
 	else
 		return 1
 	fi
-
-	# Extract frame
-	extract_frame
 }
 # }}}
 
@@ -169,6 +177,40 @@ daemon() {
 	# Start daemon
 	nohup "$LUNARIS_MOTION_SYSTEM_DIR/lunaris-motion-daemon.sh" >/dev/null 2>&1 &
 }
+# }}}
+
+# Quit {{{
+quit() {
+	# Exit safeguard
+	pgrep xwinwrap || exit 0
+
+	# Set static image as wallpaper
+	if [[ -n "$LUNARIS_MOTION_CONFIG_APPLY_STATIC" ]]; then
+
+		# Pause the video to generate frame
+		lunaris-motion --pause
+
+		# Generate the frame
+		lunaris-motion --frame
+
+		# Wait for the frame
+		SECONDS=0
+		while [[ ! -s "$LUNARIS_MOTION_FRAME_FILE" ]]; do
+			if ((SECONDS >= 10)); then
+				log "[ERROR]: Timed out waiting for frame"
+				exit 1
+			fi
+			sleep 1
+		done
+
+		# Apply wallpaper
+		xwallpaper --zoom "$LUNARIS_MOTION_FRAME_FILE"
+	fi
+
+	# Run cleanup
+	cleanup
+}
+
 # }}}
 
 # Menu {{{
@@ -212,7 +254,7 @@ menu() {
 		;;
 
 	"󰰱 Kill")
-		cleanup
+		quit
 		;;
 	esac
 }
@@ -233,6 +275,7 @@ COMMANDS:
 
   --play            Resume player
   --pause           Pause player
+	--frame						Extract player frame
   -k|--kill  				Kill player
 
 
@@ -278,8 +321,12 @@ case "$1" in
 	player_pause
 	;;
 
+--frame)
+	extract_frame
+	;;
+
 -k | --kill)
-	cleanup
+	quit
 	;;
 
 -m | --menu)
