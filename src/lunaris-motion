@@ -9,8 +9,6 @@ LUNARIS_MOTION_SOCKET_FILE="/run/user/$UID/lunaris-motion.sock"
 LUNARIS_MOTION_SYSTEM_DIR="/etc/lunaris/motion"
 # }}}
 
-# Functions {{{
-
 # Log {{{
 
 log() {
@@ -20,14 +18,15 @@ log() {
 
 # Configuration {{{
 
-user_config() {
-	if [[ -f "$LUNARIS_MOTION_CONFIG_FILE" ]]; then
-		# shellcheck disable=SC1090
-		source "$LUNARIS_MOTION_CONFIG_FILE"
-		log "[INFO]: Using user configuration"
-	fi
-}
+# Check for user configuration
+if [[ -f "$LUNARIS_MOTION_CONFIG_FILE" ]]; then
+	# shellcheck disable=SC1090
+	source "$LUNARIS_MOTION_CONFIG_FILE"
+	log "[INFO]: Using user configuration"
+fi
 # }}}
+
+# Functions {{{
 
 # Workshop {{{
 
@@ -166,28 +165,24 @@ menu() {
 
 	case "$rofi_menu" in
 	"󰓓 Workshop")
-		user_config
 		workshop
 		player
 		daemon
 		;;
 
 	"󰈫 Video")
-		user_config
 		local_video
 		player
 		daemon
 		;;
 
 	"󰦛 Restore")
-		user_config
 		cleanup
 		player
 		daemon
 		;;
 
 	"󱨘 Daemonless")
-		user_config
 		cleanup
 		player
 		;;
@@ -237,28 +232,24 @@ EOF
 
 case "$1" in
 -w | --workshop)
-	user_config
 	workshop
 	player
 	daemon
 	;;
 
 -v | --video)
-	user_config
 	local_video
 	player
 	daemon
 	;;
 
 -r | --restore)
-	user_config
 	cleanup
 	player
 	daemon
 	;;
 
 -d | --daemonless)
-	user_config
 	cleanup
 	player
 	;;
