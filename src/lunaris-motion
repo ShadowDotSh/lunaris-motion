@@ -25,8 +25,6 @@ user_config() {
 		# shellcheck disable=SC1090
 		source "$LUNARIS_MOTION_CONFIG_FILE"
 		log "[INFO]: Using user configuration"
-	else
-		log "[INFO]: Using default configuration"
 	fi
 }
 # }}}
@@ -104,8 +102,8 @@ player() {
 	fi
 
 	# Check for mpv config
-	if [[ -f "$LUNARIS_MOTION_PLAYER_CONFIG/mpv.conf" ]]; then
-		player_config="$LUNARIS_MOTION_PLAYER_CONFIG"
+	if [[ -f "$LUNARIS_MOTION_CONFIG_PLAYER/mpv.conf" ]]; then
+		player_config="$LUNARIS_MOTION_CONFIG_PLAYER"
 	elif [[ -f "$LUNARIS_MOTION_SYSTEM_DIR/mpv/mpv.conf" ]]; then
 		player_config="$LUNARIS_MOTION_SYSTEM_DIR/mpv"
 	else
@@ -142,21 +140,11 @@ cleanup() {
 # Socket {{{
 
 player_play() {
-	if [[ -S "$LUNARIS_MOTION_SOCKET_FILE" ]]; then
-		printf '%s\n' '{ "command": ["set_property", "pause", false] }' | socat - UNIX-CONNECT:"$LUNARIS_MOTION_SOCKET_FILE" >/dev/null
-		log "[INFO]: Resume player"
-	else
-		log "[ERROR]: Socket missing"
-	fi
+	printf '%s\n' '{ "command": ["set_property", "pause", false] }' | socat - UNIX-CONNECT:"$LUNARIS_MOTION_SOCKET_FILE" >/dev/null
 }
 
 player_pause() {
-	if [[ -S "$LUNARIS_MOTION_SOCKET_FILE" ]]; then
-		printf '%s\n' '{ "command": ["set_property", "pause", true] }' | socat - UNIX-CONNECT:"$LUNARIS_MOTION_SOCKET_FILE" >/dev/null
-		log "[INFO]: Pause player"
-	else
-		log "[ERROR]: Socket missing"
-	fi
+	printf '%s\n' '{ "command": ["set_property", "pause", true] }' | socat - UNIX-CONNECT:"$LUNARIS_MOTION_SOCKET_FILE" >/dev/null
 }
 # }}}
 
@@ -193,12 +181,14 @@ menu() {
 
 	"󰦛 Restore")
 		user_config
+		cleanup
 		player
 		daemon
 		;;
 
 	"󱨘 Daemonless")
 		user_config
+		cleanup
 		player
 		;;
 
@@ -222,20 +212,20 @@ menu() {
 show_help() {
 	cat <<EOF
 USAGE:
-  <env> $0 <command>
+	lunaris-motion <command>
 
 COMMANDS:
-  -w|--workshop                					Select video from workshop
-  -v|--video              							Select video from local directory
-  -r|--restore                          Restore cached wallpaper with daemon
-  -d|--daemonless                     	Restore cached wallpaper without daemon
+  -w|--workshop     Select video from workshop
+  -v|--video        Select video from local directory
+  -r|--restore      Restore cached wallpaper with daemon
+  -d|--daemonless		Restore cached wallpaper without daemon
 
-  --play                                Resume player
-  --pause                               Pause player
-  -k|--kill                             Kill running player
+  --play            Resume player
+  --pause           Pause player
+  -k|--kill  				Kill player
 
 
-  -h|--help                             Display this help message
+  -h|--help         Display this help message
 
 EOF
 }
@@ -256,7 +246,6 @@ case "$1" in
 -v | --video)
 	user_config
 	local_video
-	cleanup
 	player
 	daemon
 	;;
@@ -272,7 +261,6 @@ case "$1" in
 	user_config
 	cleanup
 	player
-	log "[INFO]: Start player daemonless"
 	;;
 
 --play)
