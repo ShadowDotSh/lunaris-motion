@@ -142,16 +142,6 @@ cleanup() {
 
 # Socket {{{
 
-extract_frame() {
-	# Save frame on disk
-	if [[ -S "$LUNARIS_MOTION_SOCKET_FILE" ]]; then
-		printf '{"command": ["screenshot-to-file", "%s", "video"]}\n' "$LUNARIS_MOTION_FRAME_FILE" | socat - UNIX-CONNECT:"$LUNARIS_MOTION_SOCKET_FILE" >/dev/null
-	else
-		log "[ERROR]: Frame extraction failed"
-		return 1
-	fi
-}
-
 player_play() {
 	# Resume player
 	if [[ -S "$LUNARIS_MOTION_SOCKET_FILE" ]]; then
@@ -169,6 +159,30 @@ player_pause() {
 		return 1
 	fi
 }
+
+extract_frame() {
+	# Save frame on disk
+	if [[ -S "$LUNARIS_MOTION_SOCKET_FILE" ]]; then
+		# Pause the video to generate frame
+		player_pause
+
+		# Generate the frame
+		printf '{"command": ["screenshot-to-file", "%s", "video"]}\n' "$LUNARIS_MOTION_FRAME_FILE" | socat - UNIX-CONNECT:"$LUNARIS_MOTION_SOCKET_FILE" >/dev/null
+
+		# Wait for the frame
+		SECONDS=0
+		while [[ ! -s "$LUNARIS_MOTION_FRAME_FILE" ]]; do
+			if ((SECONDS >= 10)); then
+				log "[ERROR]: Timed out waiting for frame"
+				exit 1
+			fi
+			sleep 1
+		done
+	else
+		log "[ERROR]: Frame extraction failed"
+		return 1
+	fi
+}
 # }}}
 
 # Slave {{{
@@ -181,27 +195,10 @@ daemon() {
 
 # Quit {{{
 quit() {
-	# Exit safeguard
-	pgrep xwinwrap || exit 0
-
 	# Set static image as wallpaper
 	if [[ -n "$LUNARIS_MOTION_CONFIG_APPLY_STATIC" ]]; then
-
-		# Pause the video to generate frame
-		lunaris-motion --pause
-
-		# Generate the frame
-		lunaris-motion --frame
-
-		# Wait for the frame
-		SECONDS=0
-		while [[ ! -s "$LUNARIS_MOTION_FRAME_FILE" ]]; do
-			if ((SECONDS >= 10)); then
-				log "[ERROR]: Timed out waiting for frame"
-				exit 1
-			fi
-			sleep 1
-		done
+		# Generate frame
+		extract_frame
 
 		# Apply wallpaper
 		xwallpaper --zoom "$LUNARIS_MOTION_FRAME_FILE"
