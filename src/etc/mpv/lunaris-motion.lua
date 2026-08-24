@@ -5,7 +5,6 @@ local script_path = "/usr/bin/lunaris-motion"
 -- Commands list
 local items = {
 	{ label = "Workshop", flag = "-w" },
-	{ label = "Local", flag = "-v" },
 	{ label = "Restore", flag = "-r" },
 	{ label = "Daemonless", flag = "-d" },
 	{ label = "Resume", flag = "--play" },
