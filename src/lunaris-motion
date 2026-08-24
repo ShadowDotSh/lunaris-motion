@@ -207,6 +207,48 @@ quit() {
 
 # }}}
 
+# Menu {{{
+
+menu() {
+	local rofi_menu
+
+	# Display menu
+	rofi_menu="$(printf '󰓓 Workshop\n󰦛 Restore\n󱨘 Daemonless\n󰐌 Play\n󰏥 Pause\n󰰱 Kill' | rofi -dmenu -sync -i -p ' Lunaris-Motion:')"
+
+	# Handle selection
+	case "$rofi_menu" in
+	"󰓓 Workshop")
+		workshop
+		player
+		daemon
+		;;
+
+	"󰦛 Restore")
+		cleanup
+		player
+		daemon
+		;;
+
+	"󱨘 Daemonless")
+		cleanup
+		player
+		;;
+
+	"󰐌 Play")
+		player_play
+		;;
+
+	"󰏥 Pause")
+		player_pause
+		;;
+
+	"󰰱 Kill")
+		quit
+		;;
+	esac
+}
+# }}}
+
 # Help {{{
 
 show_help() {
@@ -275,6 +317,10 @@ case "$1" in
 
 -k | --kill)
 	quit
+	;;
+
+-m | --menu)
+	menu
 	;;
 
 -h | --help)
