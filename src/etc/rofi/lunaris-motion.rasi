@@ -1,0 +1,101 @@
+configuration {
+  normal-window:              true;
+  show-icons:                 true;
+  disable-history:            true;
+
+  modi:                       "recursivebrowser";
+  display-recursivebrowser:   " Lunaris-Motion:";
+
+  recursivebrowser {
+    command:                  "printf %s\n";
+    filter-regex:             "(.*\.json|.*\.gif|.*\.jpg|.*\.png)";
+  }
+}
+
+@theme "/dev/null"
+
+* {
+  accent:  #89b4fa;
+  urgent:  #f38ba8;
+  base:    #1e1e2e80;
+  text:    #cdd6f4;
+}
+
+window {
+  width:              80%;
+  height:             60%;
+  location:           center;
+  anchor:             center;
+  border:             4px;
+  border-radius:      14px;
+  border-color:       @accent;
+  background-color:   @base;
+}
+
+mainbox {
+  background-color:   transparent;
+  children:           [ "inputbar", "listview" ];
+}
+
+inputbar {
+  border:             0px 0px 4px 0px;
+  border-radius:      8px;
+  border-color:       @accent;
+  background-color:   @base;
+  text-color:         @text;
+  children:           [ "prompt", "entry" ];
+}
+
+prompt{
+  padding:            8px 0px 8px 8px;
+  background-color:   transparent;
+  text-color:         @accent;
+}
+
+entry {
+  padding:              8px;
+  background-color:     transparent;
+  text-color:           @text;
+}
+
+listview {
+  columns:            4;
+  lines:              8;
+  cycle:              false;
+  scrollbar:          true;
+  layout:             vertical;
+  fixed-height:       true;
+  fixed-columns:      true;
+  background-color:   transparent;
+  text-color:         @text;
+}
+
+scrollbar{
+  handle-color:       @accent;
+  background-color:   transparent;
+}
+
+element {
+  padding:            8px;
+  background-color:   transparent;
+  text-color:         @text;
+}
+
+element-text {
+  enabled:            false;
+}
+
+element normal.normal {
+  background-color:   transparent;
+}
+
+element selected.normal {
+  background-color:   @accent;
+  text-color:         inherit;
+}
+
+element-icon {
+  enabled:            true;
+  size:               25%;
+  background-color:   transparent;
+}

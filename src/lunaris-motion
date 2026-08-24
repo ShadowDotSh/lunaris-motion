@@ -50,8 +50,8 @@ workshop() {
 	fi
 
 	# Select Wallpaper
-	selected_workshop_file="$(rofi -no-config -normal-window -show-icons -theme "$LUNARIS_MOTION_SYSTEM_DIR/lunaris-motion-grid" \
-		-show recursivebrowser -recursivebrowser-directory "$workshop_dir" -recursivebrowser-filter-regex "(.*\.json|.*\.gif|.*\.jpg|.*\.png)" -recursivebrowser-command "printf '%s\n'" 2>/dev/null)"
+	selected_workshop_file="$(rofi -config "$LUNARIS_MOTION_SYSTEM_DIR/rofi/lunaris-motion.rasi" \
+		-show recursivebrowser -recursivebrowser-directory "$workshop_dir" 2>/dev/null)"
 
 	# Exit safeguard
 	[[ -z "$selected_workshop_file" ]] && exit 0
@@ -79,8 +79,8 @@ local_video() {
 	fi
 
 	# Select Wallpaper
-	selected_video_file="$(rofi -no-config -normal-window -show-icons -theme "$LUNARIS_MOTION_SYSTEM_DIR/lunaris-motion-list" \
-		-show filebrowser -filebrowser-directory "$video_dir" -filebrowser-sorting-method "name" -filebrowser-directories-first true -filebrowser-show-hidden true -filebrowser-command "printf '%s\n'" 2>/dev/null)"
+	selected_video_file="$(rofi -config "$LUNARIS_MOTION_SYSTEM_DIR/rofi/lunaris-motion.rasi" \
+		-show filebrowser -filebrowser-directory "$video_dir" 2>/dev/null)"
 
 	# Exit safeguard
 	[[ -z "$selected_video_file" ]] && exit 0
