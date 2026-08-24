@@ -210,53 +210,6 @@ quit() {
 
 # }}}
 
-# Menu {{{
-
-menu() {
-	local rofi_menu
-
-	# Display menu
-	rofi_menu="$(printf '󰓓 Workshop\n󰈫 Video\n󰦛 Restore\n󱨘 Daemonless\n󰐌 Play\n󰏥 Pause\n󰰱 Kill' | rofi -dmenu -sync -i -p ' Lunaris-Motion:')"
-
-	case "$rofi_menu" in
-	"󰓓 Workshop")
-		workshop
-		player
-		daemon
-		;;
-
-	"󰈫 Video")
-		local_video
-		player
-		daemon
-		;;
-
-	"󰦛 Restore")
-		cleanup
-		player
-		daemon
-		;;
-
-	"󱨘 Daemonless")
-		cleanup
-		player
-		;;
-
-	"󰐌 Play")
-		player_play
-		;;
-
-	"󰏥 Pause")
-		player_pause
-		;;
-
-	"󰰱 Kill")
-		quit
-		;;
-	esac
-}
-# }}}
-
 # Help {{{
 
 show_help() {
@@ -326,17 +279,13 @@ case "$1" in
 	quit
 	;;
 
--m | --menu)
-	menu
-	;;
-
 -h | --help)
 	show_help
 	exit 0
 	;;
 
 *)
-	log "[ERROR]: Option not found, use -h or --help for help"
+	show_help
 	exit 1
 	;;
 esac
