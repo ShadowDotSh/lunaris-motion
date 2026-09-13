@@ -1,14 +1,23 @@
 # lunaris-motion
-Play video as desktop wallpaper on i3wm.
-
-## Showcase
-[![Showcase](https://img.youtube.com/vi/UA0ZBt4SfOs/0.jpg)](https://www.youtube.com/watch?v=UA0ZBt4SfOs)   
+Play a video as desktop wallpaper on i3wm.
 
 ## Disclaimer
-Lunaris-motion is tested on Arch Linux using i3 and Xlibre; it doesn't work on Wayland and may have bugs on other window managers and distributions with older packages (e.g., the recursive file browser was only added on rofi version [1.7.6](https://github.com/davatorium/rofi/releases#release-1.7.6)).
+Lunaris-motion is only tested on Arch Linux using i3 and Xlibre. Wayland, other window managers, or distributions with older packages (e.g., rofi < 1.7.6) are not supported.
+
+## Features
+- Supports Wallpaper Engine workshop on Steam, Steam Flatpak, or custom directory set on the config.
+- A daemon to pause the player when a window is open.
+- Additional features can be added via interacting with the mpv socket.
+- Extracts the current video frame as a static wallpaper on exit.
 
 ## Dependencies
-ffmpegthumbnailer mpv rofi socat xwinwrap
+| Package | Why |
+|---------|--------|
+| ffmpegthumbnailer | Video Thumbnails |
+| mpv | Player |
+| rofi | Selection |
+| socat | Communicates with the mpv socket |
+| xwinwrap | Embed player into background |
 
 ## Installation
 ``` bash
@@ -18,17 +27,20 @@ sudo make install
 ```
 
 ## Usage
-| Command | Action |
-|---------|--------|
-| lunaris-motion -w | Select video from workshop |
-| lunaris-motion -v | Select video file |
-| lunaris-motion -r | Restore cached wallpaper with daemon |
-| lunaris-motion -k | Kill player |
-| lunaris-motion --play | Resume player |
-| lunaris-motion --pause | Pause player |
-| lunaris-motion --frame | Extract player frame |
-| lunaris-motion ---daemonless | Restore cached wallpaper without daemon |
-| lunaris-motion -h | Display help message |
+See options on a rofi menu:
+``` bash
+lunaris-motion --menu
+```
+
+See options on a terminal:
+``` bash
+lunaris-motion --help
+```
+
+Generate configuration:
+``` bash
+lunaris-motion --gen-config
+```
 
 ## i3 configuration example
 Add to `~/.config/i3/config`
