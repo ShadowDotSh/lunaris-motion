@@ -9,6 +9,7 @@ Lunaris-motion is only tested on Arch Linux using i3 and Xlibre. Wayland, other 
 - A daemon to pause the player when a window is open.
 - Additional features can be added via interacting with the mpv socket.
 - Extracts the current video frame as a static wallpaper on exit.
+- Custom mpv menu on right-click.
 
 ## Dependencies
 | Package | Why |
