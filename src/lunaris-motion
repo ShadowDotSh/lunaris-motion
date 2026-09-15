@@ -46,6 +46,7 @@ fi
 log()
 {
   echo "[$(date +'%Y-%m-%d %H:%M:%S')]: $*" >&2
+  notify-send "[ Lunaris-Motion] $*"
 }
 # }}}
 
