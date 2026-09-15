@@ -1,274 +1,315 @@
 #!/usr/bin/env bash
+# Author: ShadowDotSh
 # vim:foldmethod=marker
+
+# Bash {{{
+
+# Safeguard
+set -euo pipefail
+IFS=$'\n\t'
+
+# Set empty variables
+LUNARIS_MOTION_CONFIG_APPLY_STATIC=""
+# }}}
 
 # Variables {{{
 
+# Directories
 LUNARIS_MOTION_CACHE_DIR="$HOME/.cache/lunaris/motion"
 LUNARIS_MOTION_SYSTEM_DIR="/etc/lunaris/motion"
-LUNARIS_MOTION_CONFIG_FILE="$HOME/.config/lunaris/motion.sh"
+LUNARIS_MOTION_CONFIG_DIR="$HOME/.config/lunaris/motion"
+
+# Files
 LUNARIS_MOTION_FRAME_FILE="$LUNARIS_MOTION_CACHE_DIR/frame.png"
 LUNARIS_MOTION_SOCKET_FILE="/run/user/$UID/lunaris-motion.sock"
-# }}}
-
-# Log {{{
-
-log() {
-	echo "[$(date +'%Y-%m-%d %H:%M:%S')]: $*" >&2
-}
 # }}}
 
 # Configuration {{{
 
 # Create directories
-mkdir -p "$LUNARIS_MOTION_CACHE_DIR"
+mkdir -p "$LUNARIS_MOTION_CACHE_DIR" "$LUNARIS_MOTION_CONFIG_DIR"
 
 # Check for user configuration
-if [[ -f "$LUNARIS_MOTION_CONFIG_FILE" ]]; then
-	# shellcheck disable=SC1090
-	source "$LUNARIS_MOTION_CONFIG_FILE"
+if [[ -f "$LUNARIS_MOTION_CONFIG_DIR/config.sh" ]]; then
+  # shellcheck disable=SC1091
+  source "$LUNARIS_MOTION_CONFIG_DIR/config.sh"
+elif [[ -f "$LUNARIS_MOTION_SYSTEM_DIR/config/config.sh" ]]; then
+  # shellcheck disable=SC1091
+  source "$LUNARIS_MOTION_SYSTEM_DIR/config/config.sh"
 fi
 # }}}
 
 # Functions {{{
 
-# Workshop {{{
+# Log {{{
 
-workshop() {
-	local selected_workshop_file workshop_dir
-
-	# Check for workshop directory
-	if [[ -d "$LUNARIS_MOTION_CONFIG_WORKSHOP_DIR" ]]; then
-		workshop_dir="$LUNARIS_MOTION_CONFIG_WORKSHOP_DIR"
-	elif [[ -d "$HOME/.local/share/Steam/steamapps/workshop/content/431960" ]]; then
-		workshop_dir="$HOME/.local/share/Steam/steamapps/workshop/content/431960"
-	elif [[ -d "$HOME/.var/app/com.valvesoftware.Steam/.local/share/Steam/steamapps/workshop/content/431960" ]]; then
-		workshop_dir="$HOME/.var/app/com.valvesoftware.Steam/.local/share/Steam/steamapps/workshop/content/431960"
-	else
-		log "[ERROR]: Workshop directory is missing"
-		exit 1
-	fi
-
-	# Select Wallpaper
-	selected_workshop_file="$(rofi -config "$LUNARIS_MOTION_SYSTEM_DIR/rofi/lunaris-motion.rasi" \
-		-show recursivebrowser -recursivebrowser-directory "$workshop_dir" 2>/dev/null)"
-
-	# Exit safeguard
-	[[ -z "$selected_workshop_file" ]] && exit 0
-
-	# Save selection on cache
-	printf '%s\n' "LUNARIS_MOTION_FILE=\"$selected_workshop_file\"" >"$LUNARIS_MOTION_CACHE_DIR/last"
+log()
+{
+  echo "[$(date +'%Y-%m-%d %H:%M:%S')]: $*" >&2
 }
 # }}}
 
-# Local {{{
+# Workshop {{{
 
-local_file() {
-	local selected_video_file
+workshop()
+{
+   local selected_workshop_file workshop_dir
 
-	# Save selection on cache
-	if [[ -f "$video_file" ]]; then
-		selected_video_file="$(realpath "$video_file")"
-		printf '%s\n' "LUNARIS_MOTION_FILE=\"$selected_video_file\"" >"$LUNARIS_MOTION_CACHE_DIR/last"
-	else
-		log "[ERROR]: Video file is invalid"
-		exit 1
-	fi
+  # Check for workshop directory
+  if [[ -d "$LUNARIS_MOTION_CONFIG_WORKSHOP_DIR" ]]; then
+    workshop_dir="$LUNARIS_MOTION_CONFIG_WORKSHOP_DIR"
+  elif [[ -d "$HOME/.local/share/Steam/steamapps/workshop/content/431960" ]]; then
+    workshop_dir="$HOME/.local/share/Steam/steamapps/workshop/content/431960"
+   elif [[ -d "$HOME/.var/app/com.valvesoftware.Steam/.local/share/Steam/steamapps/workshop/content/431960" ]]; then
+    workshop_dir="$HOME/.var/app/com.valvesoftware.Steam/.local/share/Steam/steamapps/workshop/content/431960"
+   else
+    log "[ERROR]: Workshop directory not found"
+    exit 1
+  fi
+
+  # Select Wallpaper
+  selected_workshop_file="$(rofi -config "$LUNARIS_MOTION_SYSTEM_DIR/config/lunaris-motion.rasi" \
+    -show recursivebrowser -recursivebrowser-directory "$workshop_dir" 2>/dev/null)"
+
+  # Exit safeguard
+  [[ -z "$selected_workshop_file" ]] && exit 0
+
+  # Save on cache
+  printf '%s\n' "LUNARIS_MOTION_FILE=\"$selected_workshop_file\"" >"$LUNARIS_MOTION_CACHE_DIR/last"
 }
 # }}}
 
 # Player {{{
 
-player() {
-	local player_config
+player()
+{
+  local player_config
 
-	# Source cached selection
-	if [[ -f "$LUNARIS_MOTION_CACHE_DIR/last" ]]; then
-		# shellcheck disable=SC1091
-		source "$LUNARIS_MOTION_CACHE_DIR/last"
-	else
-		log "[ERROR]: Cached selection is missing"
-		exit 1
-	fi
+  # Source cached selection
+  if [[ -f "$LUNARIS_MOTION_CACHE_DIR/last" ]]; then
+    # shellcheck disable=SC1091
+    source "$LUNARIS_MOTION_CACHE_DIR/last"
+  else
+    log "[ERROR]: Cache file not found"
+    exit 1
+  fi
 
-	# Check for mpv config
-	if [[ -f "$LUNARIS_MOTION_CONFIG_PLAYER/mpv.conf" ]]; then
-		player_config="$LUNARIS_MOTION_CONFIG_PLAYER"
-	elif [[ -f "$LUNARIS_MOTION_SYSTEM_DIR/mpv/mpv.conf" ]]; then
-		player_config="$LUNARIS_MOTION_SYSTEM_DIR/mpv"
-	else
-		log "[ERROR]: Mpv configuration is missing"
-		exit 1
-	fi
+  # Check for mpv config
+  if [[ -f "$LUNARIS_MOTION_CONFIG_PLAYER_DIR/mpv.conf" ]]; then
+    player_config="$LUNARIS_MOTION_CONFIG_PLAYER_DIR"
+  elif [[ -f "$LUNARIS_MOTION_SYSTEM_DIR/mpv/mpv.conf" ]]; then
+    player_config="$LUNARIS_MOTION_SYSTEM_DIR/mpv"
+  else
+    log "[ERROR]: Player configuration not found"
+    exit 1
+  fi
 
-	# Check for existing video file
-	if [[ ! -f "$LUNARIS_MOTION_FILE" ]]; then
-		log "[ERROR]: Video selected is missing"
-		exit 1
-	fi
+  # Check for existing video file
+  if [[ ! -f "$LUNARIS_MOTION_FILE" ]]; then
+    log "[ERROR]: Video selected on cache not found"
+    exit 1
+  fi
 
-	# Change video on existing player
-	if pgrep xwinwrap --quiet && [[ -S "$LUNARIS_MOTION_SOCKET_FILE" ]]; then
-		player_replace
-	else
-		# Kill old instances
-		cleanup
+  # Change video on existing player
+  if pgrep xwinwrap --quiet && [[ -S "$LUNARIS_MOTION_SOCKET_FILE" ]]; then
+    player_replace
+  else
+    # Kill old instances
+    cleanup
 
-		# Start new player
-		xwinwrap -b -d -fdt -fs -nf -ovr -s -sp -st -- \
-			mpv -wid WID "$LUNARIS_MOTION_FILE" --config-dir="$player_config" --input-ipc-server="$LUNARIS_MOTION_SOCKET_FILE" --script="$LUNARIS_MOTION_SYSTEM_DIR/mpv/lunaris-motion.lua" \
-			--fullscreen --panscan=1 --no-audio --loop \
-			--input-default-bindings=no --osc=no --osd-level=0 --terminal=no 2>/dev/null
-	fi
+    # Start new player
+    xwinwrap -b -d -fdt -fs -nf -ovr -s -sp -st -- \
+      mpv -wid WID "$LUNARIS_MOTION_FILE" --config-dir="$player_config" --input-ipc-server="$LUNARIS_MOTION_SOCKET_FILE" --script="$LUNARIS_MOTION_SYSTEM_DIR/mpv/lunaris-motion.lua" \
+      --fullscreen --panscan=1 --no-audio --loop \
+      --input-default-bindings=no --osc=no --osd-level=0 --terminal=no 2>/dev/null
+  fi
 }
 
-cleanup() {
-	pkill xwinwrap
-	pkill -f "$LUNARIS_MOTION_SYSTEM_DIR/lunaris-motion-daemon.sh"
-	rm -f "$LUNARIS_MOTION_SOCKET_FILE"
+cleanup()
+{
+  # Kill window
+  if pgrep xwinwrap >/dev/null; then
+    pkill xwinwrap >/dev/null
+  fi
+
+  # Kill daemon
+  if pgrep -f "$LUNARIS_MOTION_SYSTEM_DIR/addons/daemon.sh" >/dev/null; then 
+    pkill -f "$LUNARIS_MOTION_SYSTEM_DIR/addons/daemon.sh" >/dev/null
+  fi
+
+  # Remove socket
+  if [[ -S "$LUNARIS_MOTION_SOCKET_FILE" ]]; then
+    rm -f "$LUNARIS_MOTION_SOCKET_FILE"
+  fi
 }
 # }}}
 
 # Socket {{{
 
-player_play() {
-	# Resume player
-	if [[ -S "$LUNARIS_MOTION_SOCKET_FILE" ]]; then
-		printf '%s\n' '{ "command": ["set_property", "pause", false] }' | socat - UNIX-CONNECT:"$LUNARIS_MOTION_SOCKET_FILE" >/dev/null
-	else
-		return 1
-	fi
+player_play()
+{
+  # Resume player
+  if [[ -S "$LUNARIS_MOTION_SOCKET_FILE" ]]; then
+    printf '%s\n' '{ "command": ["set_property", "pause", false] }' | socat - UNIX-CONNECT:"$LUNARIS_MOTION_SOCKET_FILE" >/dev/null
+  else
+    return 1
+  fi
 }
 
-player_pause() {
-	# Pause player
-	if [[ -S "$LUNARIS_MOTION_SOCKET_FILE" ]]; then
-		printf '%s\n' '{ "command": ["set_property", "pause", true] }' | socat - UNIX-CONNECT:"$LUNARIS_MOTION_SOCKET_FILE" >/dev/null
-	else
-		return 1
-	fi
+player_pause()
+{
+  # Pause player
+  if [[ -S "$LUNARIS_MOTION_SOCKET_FILE" ]]; then
+    printf '%s\n' '{ "command": ["set_property", "pause", true] }' | socat - UNIX-CONNECT:"$LUNARIS_MOTION_SOCKET_FILE" >/dev/null
+  else
+    return 1
+  fi
 }
 
-player_replace() {
-	# Replace video
-	if [[ -S "$LUNARIS_MOTION_SOCKET_FILE" ]]; then
-		printf '{"command": ["loadfile", "%s", "replace"]}\n' "$LUNARIS_MOTION_FILE" | socat - UNIX-CONNECT:"$LUNARIS_MOTION_SOCKET_FILE" >/dev/null
-	else
-		return 1
-	fi
+player_replace()
+{
+  # Replace video
+  if [[ -S "$LUNARIS_MOTION_SOCKET_FILE" ]]; then
+    printf '{"command": ["loadfile", "%s", "replace"]}\n' "$LUNARIS_MOTION_FILE" | socat - UNIX-CONNECT:"$LUNARIS_MOTION_SOCKET_FILE" >/dev/null
+  else
+    return 1
+  fi
 }
 
-extract_frame() {
-	# Save frame on disk
-	if [[ -S "$LUNARIS_MOTION_SOCKET_FILE" ]]; then
-		# Pause the video to generate frame
-		player_pause
+extract_frame()
+{
+  # Save frame on disk
+  if [[ -S "$LUNARIS_MOTION_SOCKET_FILE" ]]; then
+    # Pause the video to generate frame
+    player_pause
 
-		# Generate the frame
-		printf '{"command": ["screenshot-to-file", "%s", "video"]}\n' "$LUNARIS_MOTION_FRAME_FILE" | socat - UNIX-CONNECT:"$LUNARIS_MOTION_SOCKET_FILE" >/dev/null
+    # Generate the frame
+    printf '{"command": ["screenshot-to-file", "%s", "video"]}\n' "$LUNARIS_MOTION_FRAME_FILE" | socat - UNIX-CONNECT:"$LUNARIS_MOTION_SOCKET_FILE" >/dev/null
 
-		# Wait for the frame
-		SECONDS=0
-		while [[ ! -s "$LUNARIS_MOTION_FRAME_FILE" ]]; do
-			if ((SECONDS >= 10)); then
-				log "[ERROR]: Timed out waiting for frame"
-				return 1
-			fi
-			sleep 1
-		done
-	else
-		log "[ERROR]: Frame extraction failed"
-		return 1
-	fi
+    # Wait for the frame
+    SECONDS=0
+    while [[ ! -s "$LUNARIS_MOTION_FRAME_FILE" ]]; do
+      if ((SECONDS >= 10)); then
+        log "[ERROR]: Timed out waiting for frame"
+        return 1
+      fi
+      sleep 1
+    done
+  else
+    log "[ERROR]: Frame extraction failed"
+    return 1
+  fi
 }
 # }}}
 
 # Slave {{{
 
-daemon() {
-	# Start daemon
-	nohup "$LUNARIS_MOTION_SYSTEM_DIR/lunaris-motion-daemon.sh" >/dev/null 2>&1 &
+daemon()
+{
+  # Start daemon
+  if ! pgrep -f "$LUNARIS_MOTION_SYSTEM_DIR/addons/daemon.sh" >/dev/null; then 
+    nohup "$LUNARIS_MOTION_SYSTEM_DIR/addons/daemon.sh" >/dev/null 2>&1 &
+  fi
 }
 # }}}
 
 # Quit {{{
-quit() {
-	# Set static image as wallpaper
-	if [[ -n "$LUNARIS_MOTION_CONFIG_APPLY_STATIC" ]]; then
-		# Generate frame
-		extract_frame
+quit()
+{
+  # Set static image as wallpaper
+  if [[ "$LUNARIS_MOTION_CONFIG_APPLY_STATIC" == "true" ]]; then
+    # Generate frame
+    extract_frame
 
-		# Apply wallpaper
-		xwallpaper --zoom "$LUNARIS_MOTION_FRAME_FILE"
-	fi
+    # Apply wallpaper
+    xwallpaper --zoom "$LUNARIS_MOTION_FRAME_FILE"
+  fi
 
-	# Run cleanup
-	cleanup
+  # Run cleanup
+  cleanup
 }
 
 # }}}
 
+# Config {{{
+
+gen_config()
+{
+  # Create backup
+  if [[ -f "$LUNARIS_MOTION_CONFIG_DIR/config.sh" ]]; then
+    cp "$LUNARIS_MOTION_CONFIG_DIR/config.sh" "$LUNARIS_MOTION_CONFIG_DIR/config.sh.bak"
+  fi
+
+  # Copy example config
+  cp "$LUNARIS_MOTION_SYSTEM_DIR/config/config.sh" "$LUNARIS_MOTION_CONFIG_DIR/"
+}
+# }}}
+
 # Menu {{{
 
-menu() {
-	local rofi_menu
+menu()
+{
+  local rofi_menu
 
-	# Display menu
-	rofi_menu="$(printf '󰓓 Workshop\n󰦛 Restore\n󱨘 Daemonless\n󰐌 Play\n󰏥 Pause\n󰰱 Kill' | rofi -dmenu -sync -i -p ' Lunaris-Motion:')"
+  # Display menu
+  rofi_menu="$(printf '󰓓 Workshop\n󰦛 Restore\n󱨘 Daemonless\n󰐌 Play\n󰏥 Pause\n󰰱 Kill' | rofi -dmenu -sync -i -p ' Lunaris-Motion:')"
 
-	# Handle selection
-	case "$rofi_menu" in
-	"󰓓 Workshop")
-		workshop
-		player
-		daemon
-		;;
+  # Handle selection
+  case "$rofi_menu" in
+    "󰓓 Workshop")
+      workshop
+      player
+      daemon
+    ;;
 
-	"󰦛 Restore")
-		cleanup
-		player
-		daemon
-		;;
+    "󰦛 Restore")
+      cleanup
+      player
+      daemon
+    ;;
 
-	"󱨘 Daemonless")
-		cleanup
-		player
-		;;
+    "󱨘 Daemonless")
+      cleanup
+      player
+    ;;
 
-	"󰐌 Play")
-		player_play
-		;;
+    "󰐌 Play")
+      player_play
+    ;;
 
-	"󰏥 Pause")
-		player_pause
-		;;
+    "󰏥 Pause")
+      player_pause
+    ;;
 
-	"󰰱 Kill")
-		quit
-		;;
-	esac
+    "󰰱 Kill")
+      quit
+    ;;
+  esac
 }
 # }}}
 
 # Help {{{
 
-show_help() {
-	cat <<EOF
+show_help()
+{
+  cat <<EOF
 USAGE:
-	lunaris-motion <command>
+  lunaris-motion     <command>
 
 COMMANDS:
-  -w|--workshop     Select video from workshop
-  -v|--video        Select video file
-  -r|--restore      Restore cached wallpaper with daemon
-  -d|--daemonless		Restore cached wallpaper without daemon
+  -w|--workshop      Select video from workshop
+  -r|--restore       Restore last wallpaper with daemon
+  -d|--daemonless    Restore last wallpaper without daemon
+  -k|--kill          Kill player
 
-  --play            Resume player
-  --pause           Pause player
-	--frame						Extract player frame
-  -k|--kill  				Kill player
+  --play             Resume player
+  --pause            Pause player
+  --frame            Extract player frame
 
+  --menu             Open options on rofi
+  --gen-config       Generate example config
 
-  -h|--help         Display this help message
+  -h|--help          Display this help message
 
 EOF
 }
@@ -278,59 +319,56 @@ EOF
 
 # Master {{{
 
-case "$1" in
--w | --workshop)
-	workshop
-	player
-	daemon
-	;;
+case "${1:-}" in
+  -w | --workshop)
+    workshop
+    player
+    daemon
+  ;;
 
--v | --video)
-	video_file="$2"
-	local_file
-	player
-	daemon
-	;;
+  -r | --restore)
+    cleanup
+    player
+    daemon
+  ;;
 
--r | --restore)
-	cleanup
-	player
-	daemon
-	;;
+  -d | --daemonless)
+    cleanup
+    player
+  ;;
 
--d | --daemonless)
-	cleanup
-	player
-	;;
+  --play)
+    player_play
+  ;;
 
---play)
-	player_play
-	;;
+  --pause)
+    player_pause
+  ;;
 
---pause)
-	player_pause
-	;;
+  --frame)
+    extract_frame
+  ;;
 
---frame)
-	extract_frame
-	;;
+  -k | --kill)
+    quit
+  ;;
 
--k | --kill)
-	quit
-	;;
+  --menu)
+    menu
+  ;;
 
--m | --menu)
-	menu
-	;;
+  -h | --help)
+    show_help
+    exit 0
+  ;;
 
--h | --help)
-	show_help
-	exit 0
-	;;
+  --gen-config)
+    gen_config
+  ;;
 
-*)
-	show_help
-	exit 1
-	;;
+  *)
+    show_help
+    exit 1
+  ;;
 esac
 # }}}
