@@ -19,6 +19,7 @@ Lunaris-motion is only tested on Arch Linux using i3 and Xlibre. Wayland, other 
 | rofi | Selection |
 | socat | Communicates with the mpv socket |
 | xwinwrap | Embed player into background |
+| xwallpaper | Apply static wallpaper |
 
 ## Installation
 ``` bash
