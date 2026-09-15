@@ -4,12 +4,13 @@ local script_path = "/usr/bin/lunaris-motion"
 
 -- Commands list
 local items = {
-	{ label = "Workshop", flag = "-w" },
-	{ label = "Restore", flag = "-r" },
-	{ label = "Daemonless", flag = "-d" },
+	{ label = "Workshop", flag = "--workshop" },
+  { label = "Videos", flag = "--video" },
+	{ label = "Restore", flag = "--restore" },
+	{ label = "Daemonless", flag = "--daemonless" },
 	{ label = "Resume", flag = "--play" },
 	{ label = "Pause", flag = "--pause" },
-	{ label = "Kill", flag = "-k" },
+	{ label = "Kill", flag = "--kill" },
 }
 
 -- Execute bash script asynchronously

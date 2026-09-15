@@ -75,7 +75,36 @@ workshop()
   [[ -z "$selected_workshop_file" ]] && exit 0
 
   # Save on cache
-  printf '%s\n' "LUNARIS_MOTION_FILE=\"$selected_workshop_file\"" >"$LUNARIS_MOTION_CACHE_DIR/last"
+  printf 'LUNARIS_MOTION_FILE="%s"\n' "$selected_workshop_file" >"$LUNARIS_MOTION_CACHE_DIR/last"
+}
+# }}}
+
+# Videos {{{
+local_video()
+{
+  local video_dir
+
+  # Check for video directory
+  if [[ -d "$LUNARIS_MOTION_CONFIG_VIDEO_DIR" ]]; then
+    video_dir="$LUNARIS_MOTION_CONFIG_VIDEO_DIR"
+  elif [[ -d "$(xdg-user-dir VIDEOS)/lunaris-motion" ]]; then
+    video_dir="$(xdg-user-dir VIDEOS)/lunaris-motion"
+  elif [[ -d "$HOME/Videos/lunaris-motion" ]]; then
+    video_dir="$HOME/Videos/lunaris-motion"
+  else
+    log "[ERROR]: Video directory not found"
+    exit 1
+  fi
+
+	# Select video
+  selected_video_file="$(rofi -config "$LUNARIS_MOTION_SYSTEM_DIR/config/lunaris-motion.rasi" \
+	  -show filebrowser -filebrowser-directory "$video_dir" 2>/dev/null)"
+
+  # Exit safeguard
+  [[ -z "$selected_video_file" ]] && exit 0
+
+  # Save on cache
+  printf 'LUNARIS_MOTION_FILE="%s"\n' "$selected_video_file" >"$LUNARIS_MOTION_CACHE_DIR/last"
 }
 # }}}
 
@@ -252,12 +281,18 @@ menu()
   local rofi_menu
 
   # Display menu
-  rofi_menu="$(printf '󰓓 Workshop\n󰦛 Restore\n󱨘 Daemonless\n󰐌 Play\n󰏥 Pause\n󰰱 Kill' | rofi -dmenu -sync -i -p ' Lunaris-Motion:')"
+  rofi_menu="$(printf '󰓓 Workshop\n󰈫 Videos\n󰦛 Restore\n󱨘 Daemonless\n󰐌 Play\n󰏥 Pause\n󰰱 Kill' | rofi -dmenu -sync -i -p ' Lunaris-Motion:')"
 
   # Handle selection
   case "$rofi_menu" in
     "󰓓 Workshop")
       workshop
+      player
+      daemon
+    ;;
+
+    "󰈫 Videos")
+      local_video
       player
       daemon
     ;;
@@ -297,14 +332,15 @@ USAGE:
   lunaris-motion     <command>
 
 COMMANDS:
-  -w|--workshop      Select video from workshop
+  -w|--workshop      Select wallpaper from workshop
+  -v|--video         Select wallpaper from videos
   -r|--restore       Restore last wallpaper with daemon
   -d|--daemonless    Restore last wallpaper without daemon
-  -k|--kill          Kill player
+  -k|--kill          Kill wallpaper
 
-  --play             Resume player
-  --pause            Pause player
-  --frame            Extract player frame
+  --play             Resume wallpaper
+  --pause            Pause wallpaper
+  --frame            Extract current wallpaper frame
 
   --menu             Open options on rofi
   --gen-config       Generate example config
@@ -322,6 +358,12 @@ EOF
 case "${1:-}" in
   -w | --workshop)
     workshop
+    player
+    daemon
+  ;;
+
+  -v | --video)
+    local_video
     player
     daemon
   ;;

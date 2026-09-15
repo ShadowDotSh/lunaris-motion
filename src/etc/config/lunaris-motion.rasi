@@ -3,8 +3,16 @@ configuration {
   show-icons:                 true;
   disable-history:            true;
 
-  modi:                       "recursivebrowser";
+  modi:                       "filebrowser,recursivebrowser";
+  display-filebrowser:        " Lunaris-Motion:";
   display-recursivebrowser:   " Lunaris-Motion:";
+
+  filebrowser {
+    sorting-method:           "name";
+    directories-first:        true;
+    show-hidden:              true;
+    command:                  "printf %s\n";
+  }
 
   recursivebrowser {
     command:                  "printf %s\n";
